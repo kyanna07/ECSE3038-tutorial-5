@@ -28,3 +28,13 @@ def get_device(name: str):
     if device is None:
         raise HTTPException(status_code=404, detail="No device called " + name)
     return device
+
+@app.post("/devices", status_code=201)
+def create_device(device: Device, response: Response):
+    if devices.find_one({"name": device.name}) is not None:
+        raise HTTPException(status_code=409, detail="A device called " + device.name + " already exists")
+    new_device = device.model_dump()
+    devices.insert_one(new_device)
+    new_device.pop("_id")
+    response.headers["Location"] = "/devices/" + device.name
+    return new_device
