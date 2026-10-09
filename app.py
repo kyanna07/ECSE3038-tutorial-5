@@ -38,3 +38,14 @@ def create_device(device: Device, response: Response):
     new_device.pop("_id")
     response.headers["Location"] = "/devices/" + device.name
     return new_device
+
+@app.put("/devices/{name}")
+def put_device(name: str, device: Device, response: Response):
+    new_device = device.model_dump()
+    new_device["name"] = name
+    result = devices.replace_one({"name": name}, new_device, upsert=True)
+    new_device.pop("_id", None)
+    if result.matched_count == 0:
+        response.status_code = 201
+        response.headers["Location"] = "/devices/" + name
+    return new_device
