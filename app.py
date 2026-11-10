@@ -18,9 +18,11 @@ class Device(BaseModel):
     temp: float
     online: bool
 
+
 @app.get("/devices")
 def get_devices():
     return list(devices.find({}, {"_id": 0}))
+
 
 @app.get("/devices/{name}")
 def get_device(name: str):
@@ -29,15 +31,20 @@ def get_device(name: str):
         raise HTTPException(status_code=404, detail="No device called " + name)
     return device
 
+
 @app.post("/devices", status_code=201)
 def create_device(device: Device, response: Response):
     if devices.find_one({"name": device.name}) is not None:
-        raise HTTPException(status_code=409, detail="A device called " + device.name + " already exists")
+        raise HTTPException(
+            status_code=409,
+            detail="A device called " + device.name + " already exists",
+        )
     new_device = device.model_dump()
     devices.insert_one(new_device)
     new_device.pop("_id")
     response.headers["Location"] = "/devices/" + device.name
     return new_device
+
 
 @app.put("/devices/{name}")
 def put_device(name: str, device: Device, response: Response):
@@ -50,9 +57,16 @@ def put_device(name: str, device: Device, response: Response):
         response.headers["Location"] = "/devices/" + name
     return new_device
 
+
 @app.delete("/devices/{name}")
 def delete_device(name: str):
     result = devices.delete_one({"name": name})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="No device called " + name)
     return {"deleted": name}
+
+
+# --- Added for Tutorial 6 & 8 ---
+@app.get("/limit")
+def get_limit():
+    return {"limit": 28.0}
